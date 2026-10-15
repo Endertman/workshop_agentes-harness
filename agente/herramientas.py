@@ -1,39 +1,21 @@
+import arxiv
+
 DEFINICIONES = [
     {
-        "name": "ir_a",
-        "description": "Abre una URL en el navegador.",
+        "name": "buscar_arxiv",
+        "description": "Busca papers en arXiv. Devuelve id, título, autores y resumen de los 5 primeros resultados.",
         "input_schema": {
             "type": "object",
-            "properties": {"url": {"type": "string"}},
-            "required": ["url"],
-        },
-    },
-    {
-        "name": "leer_texto",
-        "description": "Devuelve el texto visible de la página actual.",
-        "input_schema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "leer_historias",
-        "description": "Devuelve las historias de Hacker News de la página actual: posición, id, título y si ya está votada.",
-        "input_schema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "clic",
-        "description": "Hace clic en un elemento de la página usando un selector CSS.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"selector": {"type": "string", "description": 'Por ejemplo: a[id="up_123"]'}},
-            "required": ["selector"],
+            "properties": {"consulta": {"type": "string", "description": 'Por ejemplo: "P versus NP"'}},
+            "required": ["consulta"],
         },
     },
 ]
 
 
-def crear_herramientas(navegador):
-    return {
-        "ir_a": navegador.ir_a,
-        "leer_texto": navegador.leer_texto,
-        "leer_historias": navegador.leer_historias,
-        "clic": navegador.clic,
-    }
+def sin_busqueda(consulta):
+    return "La búsqueda en arXiv está desactivada. Responde con lo que sepas."
+
+
+def crear_herramientas(activas=True):
+    return {"buscar_arxiv": arxiv.buscar if activas else sin_busqueda}

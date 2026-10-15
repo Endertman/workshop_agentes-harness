@@ -55,6 +55,7 @@ Cada rama agrega una pieza:
 | `3` | El harness: abre el entorno (el navegador), corre el bucle y lo cierra siempre |
 | `4` | Verificación: el harness no le cree al modelo, revisa el navegador y reintenta si falló |
 | `5` | Validación de cada paso: después de cada paso el harness revisa el navegador y, si el agente llegó al login, inicia sesión por él |
+| `6` | Otro dominio, el mismo harness: el agente recomienda papers de arXiv y el harness verifica en la API de arXiv que existan y que el título coincida |
 
 En las ramas 1 a 4 el agente dice "listo, voté", pero el voto no queda: Hacker News lo manda al login. Recién en la rama 4 el harness se da cuenta, y en la rama 5 lo arregla.
 
@@ -78,6 +79,7 @@ Todo el código está en la carpeta `agente/`.
 | `harness.py` | 3 | Abre el entorno, corre el bucle, verifica y cierra |
 | `verificar.py` | 4 | Revisa en el navegador si el voto quedó de verdad |
 | `login.py` | 5 | Revisa cada paso e inicia sesión cuando hace falta |
+| `arxiv.py` | 6 | El entorno nuevo: busca papers y consulta un ID en la API de arXiv (reemplaza a `navegador.py` y `login.py`) |
 
 ## Cómo correrlo
 
@@ -108,6 +110,22 @@ python agente/inicio.py
 Ese Chrome recuerda la sesión de Hacker News. Si ya iniciaste sesión, en las ramas 1 a 4 el voto sí funcionará: muéstralas antes de iniciar sesión, o cierra sesión antes de repetirlas.
 
 Para cambiar de modelo, edita `MODELO` en `agente/modelo.py`.
+
+## Rama 6: el oráculo de arXiv
+
+`bucle.py`, `contexto.py`, `limites.py` y `modelo.py` no cambian. Solo cambian el entorno (`arxiv.py`), las herramientas y el verificador. Eso es lo que se lleva de un dominio a otro.
+
+La tarea: recomendar 3 papers sobre P vs NP con el formato `- [arXiv:ID] Título`. El verificador consulta cada ID en arXiv y compara el título. Si falla, el harness reintenta y esta vez le dice al modelo **por qué** falló (en la rama 4 reintentaba a ciegas). No le dice el título real: el modelo lo copiaría sin buscar.
+
+No necesita Chrome ni claves de Hacker News, solo `ANTHROPIC_API_KEY`:
+
+```sh
+git checkout 6
+pip install -r requirements.txt
+python agente/inicio.py
+```
+
+Para la demo, pon `CON_BUSQUEDA = False` en `agente/inicio.py`. El agente responde de memoria, inventa IDs o títulos y la verificación falla. Con `True` busca y pasa.
 
 ---
 

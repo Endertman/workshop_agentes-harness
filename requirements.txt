@@ -1,3 +1,2 @@
 anthropic
-playwright
 python-dotenv

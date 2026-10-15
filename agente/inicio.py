@@ -1,14 +1,14 @@
 from harness import correr_harness
-from verificar import verificar_voto
+from verificar import verificar_citas
 
-TAREA = """Vota por una historia en Hacker News.
+# Ponlo en False para que el agente responda de memoria, sin buscar en arXiv
+CON_BUSQUEDA = True
 
-Entra a https://news.ycombinator.com.
-Usa leer_historias para ver las historias con su posición, id y si ya está votada.
-Elige la historia mejor ubicada que todavía no esté votada.
-Haz clic en su flecha de voto con el selector exacto a[id="up_ID"] (cambia ID por el id real)."""
+TAREA = """Recomiéndame 3 papers de arXiv sobre el problema P vs NP.
+Responde con una línea por paper, con este formato exacto:
+- [arXiv:ID] Título"""
 
-resultado = correr_harness(TAREA, verificar_voto)
+resultado = correr_harness(TAREA, verificar_citas, herramientas_activas=CON_BUSQUEDA)
 
 print("\n--- Resultado ---")
 print(resultado["respuesta"])
