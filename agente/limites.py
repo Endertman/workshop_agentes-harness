@@ -1,4 +1,4 @@
-MAX_ITERACIONES = 15
+MAX_ITERACIONES = 25
 
 
 def revisar_limites(iteracion):

@@ -1,14 +1,13 @@
 from harness import correr_harness
 from verificar import verificar_citas
 
-# Ponlo en False para que el agente responda de memoria, sin buscar en arXiv
-CON_BUSQUEDA = True
+TAREA = """Busca en arXiv papers sobre las barreras para resolver P vs NP (relativización, pruebas naturales, algebrización).
+Descarga los 2 más relevantes y responde: ¿por qué las técnicas actuales no alcanzan para probar P ≠ NP?
+Respalda cada idea con una cita textual de los papers, una por línea, con este formato exacto:
+- [arXiv:ID] "cita textual en el idioma original" — tu explicación
+Cita frases en prosa, no fórmulas: al pasar el PDF a texto, la notación matemática se rompe."""
 
-TAREA = """Recomiéndame 3 papers de arXiv sobre el problema P vs NP.
-Responde con una línea por paper, con este formato exacto:
-- [arXiv:ID] Título"""
-
-resultado = correr_harness(TAREA, verificar_citas, herramientas_activas=CON_BUSQUEDA)
+resultado = correr_harness(TAREA, verificar_citas)
 
 print("\n--- Resultado ---")
 print(resultado["respuesta"])

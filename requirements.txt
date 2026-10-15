@@ -1,2 +1,4 @@
 anthropic
 python-dotenv
+model2vec
+pypdf

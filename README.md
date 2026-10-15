@@ -56,6 +56,7 @@ Cada rama agrega una pieza:
 | `4` | Verificación: el harness no le cree al modelo, revisa el navegador y reintenta si falló |
 | `5` | Validación de cada paso: después de cada paso el harness revisa el navegador y, si el agente llegó al login, inicia sesión por él |
 | `6` | Otro dominio, el mismo harness: el agente recomienda papers de arXiv y el harness verifica en la API de arXiv que existan y que el título coincida |
+| `7` | RAG: el agente descarga los papers y responde con citas textuales; el harness verifica que cada cita salga de un fragmento que devolvió el RAG |
 
 En las ramas 1 a 4 el agente dice "listo, voté", pero el voto no queda: Hacker News lo manda al login. Recién en la rama 4 el harness se da cuenta, y en la rama 5 lo arregla.
 
@@ -80,6 +81,7 @@ Todo el código está en la carpeta `agente/`.
 | `verificar.py` | 4 | Revisa en el navegador si el voto quedó de verdad |
 | `login.py` | 5 | Revisa cada paso e inicia sesión cuando hace falta |
 | `arxiv.py` | 6 | El entorno nuevo: busca papers y consulta un ID en la API de arXiv (reemplaza a `navegador.py` y `login.py`) |
+| `biblioteca.py` | 7 | El RAG: descarga los PDF, los corta en fragmentos y busca por similitud coseno |
 
 ## Cómo correrlo
 
@@ -126,6 +128,46 @@ python agente/inicio.py
 ```
 
 Para la demo, pon `CON_BUSQUEDA = False` en `agente/inicio.py`. El agente responde de memoria, inventa IDs o títulos y la verificación falla. Con `True` busca y pasa.
+
+## Rama 7: RAG con citas verificadas
+
+La rama 6 atrapa papers inventados. La 7 atrapa algo más sutil: **un paper real al que se le atribuye algo que no dice**.
+
+### Qué es un RAG
+
+RAG (*Retrieval-Augmented Generation*) significa buscar primero y generar después. Para el agente es una herramienta más, igual que hacer clic en Hacker News. Hay tres familias de búsqueda, y las tres son vectores:
+
+| Tipo | Vector de cada texto | Encuentra | Falla con |
+|---|---|---|---|
+| **Disperso** (BM25) | Una dimensión por palabra del vocabulario; casi todas en cero | Términos exactos, siglas, nombres (`Razborov`, `ΛCDM`) | Sinónimos y paráfrasis |
+| **Denso** (embeddings) | Unas cientos de dimensiones aprendidas; todas con valor | Significado, paráfrasis | Términos exactos raros |
+| **Híbrido** | Los dos, y se combinan los rankings | Lo mejor de ambos | Es más complejo |
+
+Esta rama usa **vectores densos**. Cada fragmento de cada paper es una fila de una matriz `M` (N fragmentos × 256 dimensiones), con filas normalizadas. Buscar es una multiplicación matriz-vector:
+
+```python
+puntajes = M @ q   # q: la pregunta como vector unitario → similitud coseno con cada fragmento
+```
+
+No hay base de datos vectorial: con decenas de papers, la búsqueda exacta sobra. Los embeddings los calcula [model2vec](https://github.com/MinishLab/model2vec) (`potion-base-8M`, ~30 MB), sin GPU ni torch.
+
+### Qué verifica el harness
+
+Las citas tienen el formato `- [arXiv:ID] "cita textual" — explicación`. Para cada una, el verificador revisa los pasos del intento y exige que el texto aparezca **en un fragmento que `consultar_rag` devolvió para ese mismo paper**. Si el agente no usó el RAG, no hay fragmentos y la verificación falla. Así el harness **obliga** a usar el RAG sin tener que pedírselo al modelo.
+
+El verificador compara solo letras y números, así que tolera lo que el PDF rompe: espacios dentro de palabras, `’` frente a `'`, superíndices aplanados (`P^NP` sale como `P NP`). También acepta elipsis (`A ... B`). Las fórmulas no tienen arreglo: al pasar el PDF a texto, la notación se rompe (`MA eA E ̸⊆P A/poly`) y, si el modelo la reescribe bien, la cita ya no es textual. Por eso la tarea pide citar prosa. Lo que nunca pasa es una paráfrasis presentada como cita, que es justo lo que se busca atrapar.
+
+```sh
+git checkout 7
+pip install -r requirements.txt
+python agente/inicio.py
+```
+
+La primera vez se descargan el modelo de embeddings y los PDF (`papers/`, ignorada por git). Córrelo una vez antes del taller para que la demo no dependa de la red.
+
+### Lo que el harness no puede hacer
+
+arXiv está lleno de "pruebas" de P = NP y de P ≠ NP (busca la de Norbert Blum, de 2017, y lo que pasó después). El harness verifica que la cita sea **fiel a la fuente**, no que la fuente **tenga razón**. Si el agente cita textualmente una prueba equivocada, la verificación pasa. El harness te da trazabilidad; decidir qué es verdad sigue siendo trabajo del científico.
 
 ---
 
