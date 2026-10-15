@@ -1,5 +1,6 @@
-from contexto import SISTEMA
+from contexto import SISTEMA, recortar_contexto
 from herramientas import DEFINICIONES
+from limites import revisar_limites
 from modelo import llamar_modelo
 
 
@@ -9,6 +10,11 @@ def correr_bucle(mensajes, herramientas):
 
     while True:
         iteracion += 1
+        mensajes = recortar_contexto(mensajes)
+        motivo = revisar_limites(iteracion)
+        if motivo:
+            return {"respuesta": motivo, "detenido_por": "límite", "pasos": pasos}
+
         print(f"[iteración {iteracion}] llamando al modelo ({len(mensajes)} mensajes en contexto)")
         respuesta = llamar_modelo(SISTEMA, mensajes, DEFINICIONES)
         mensajes.append({"role": "assistant", "content": respuesta.content})
