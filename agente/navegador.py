@@ -35,5 +35,11 @@ class Navegador:
         self.pagina.wait_for_load_state("domcontentloaded", timeout=10000)
         return f"Clic en {selector}, ahora en {self.pagina.url}"
 
+    def escribir(self, selector, texto):
+        self.pagina.fill(selector, texto)
+
+    def pide_login(self):
+        return self.pagina.locator("input[name='pw']").count() > 0
+
     def cerrar(self):
         self.playwright.stop()

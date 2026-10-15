@@ -1,6 +1,7 @@
 from bucle import correr_bucle
 from contexto import crear_contexto
 from herramientas import crear_herramientas
+from login import revisar_login
 from navegador import Navegador
 
 
@@ -19,7 +20,7 @@ def correr_intento(tarea, verificar):
     try:
         herramientas = crear_herramientas(navegador)
         mensajes = crear_contexto(tarea)
-        resultado = correr_bucle(mensajes, herramientas)
+        resultado = correr_bucle(mensajes, herramientas, revisar_paso=lambda: revisar_login(navegador))
         verificado, motivo = verificar(navegador, resultado["pasos"])
         resultado["verificado"] = verificado
         resultado["motivo"] = motivo

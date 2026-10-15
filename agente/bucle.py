@@ -4,7 +4,7 @@ from limites import revisar_limites
 from modelo import llamar_modelo
 
 
-def correr_bucle(mensajes, herramientas):
+def correr_bucle(mensajes, herramientas, revisar_paso):
     pasos = []
     iteracion = 0
 
@@ -30,6 +30,10 @@ def correr_bucle(mensajes, herramientas):
                 resultado = ejecutar(herramientas, bloque.name, bloque.input)
                 pasos.append({"herramienta": bloque.name, "entrada": bloque.input, "resultado": resultado})
                 resultados.append({"type": "tool_result", "tool_use_id": bloque.id, "content": resultado})
+
+        aviso = revisar_paso()
+        if aviso:
+            resultados.append({"type": "text", "text": aviso})
 
         mensajes.append({"role": "user", "content": resultados})
 
